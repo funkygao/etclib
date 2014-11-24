@@ -1,6 +1,6 @@
 package etclib
 
-type Node struct {
-	Addr string
-	Boot bool // True if new node intanced added, else an existing node shutdown
+type NodeEvent struct {
+	Addr      string // e,g. 12.25.123.55:9002
+	EventType string
 }

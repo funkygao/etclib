@@ -90,34 +90,34 @@ func ClusterNodes(nodeType string) ([]string, error) {
 	return nodes, nil
 }
 
-func WatchFaeNodes() (ch chan Node) {
+func WatchFaeNodes() (ch chan NodeEvent) {
 	return watchNodes(NODE_FAE)
 }
 
-func WatchActorNodes() (ch chan Node) {
+func WatchActorNodes() (ch chan NodeEvent) {
 	return watchNodes(NODE_ACTOR)
 }
 
-func watchNodes(nodeType string) (ch chan Node) {
-	ch = make(chan Node, 10)
+func watchNodes(nodeType string) (ch chan NodeEvent) {
+	ch = make(chan NodeEvent, 10)
 
 	watchChan := make(chan *etcd.Response)
 	go client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
 
 	go func() {
-		var boot bool
+		var evtType string
 		for evt := range watchChan {
-			log.Debug("event: %+v", *evt)
+			log.Debug("event[%s] %+v", evt.Action, *evt.Node)
 
 			switch evt.Action {
 			case "set", "create":
-				boot = true
+				evtType = NODE_EVT_BOOT
 
 			case "delete":
-				boot = false
+				evtType = NODE_EVT_SHUTDOWN
 			}
 
-			ch <- Node{Addr: nodeName(evt.Node.Key), Boot: boot}
+			ch <- NodeEvent{Addr: nodeName(evt.Node.Key), EventType: evtType}
 		}
 	}()
 

@@ -13,9 +13,13 @@ const (
 
 const (
 	STATUS_ALIVE = "alive"
-	STATUS_DIED  = "died"
 )
 
 const (
 	NODE_PING_INTERVAL = 600 // in seconds
+)
+
+const (
+	NODE_EVT_BOOT     = "boot"
+	NODE_EVT_SHUTDOWN = "shutdown"
 )
