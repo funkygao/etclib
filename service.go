@@ -115,7 +115,7 @@ func watchNodes(nodeType string) (ch chan NodeEvent) {
 			case "set", "create":
 				evtType = NODE_EVT_BOOT
 
-			case "delete":
+			case "delete", "expire":
 				evtType = NODE_EVT_SHUTDOWN
 			}
 
