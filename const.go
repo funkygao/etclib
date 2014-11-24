@@ -1,10 +1,15 @@
 package etclib
 
 const (
-	DIR_PROJECT  = "proj"
-	DIR_FAE      = "fae"
-	DIR_ACTOR    = "actor"
-	DIR_MAINTAIN = "maintain"
+	DIR_PROJECT = "proj"
+	DIR_NODES   = "node"
+
+	DIR_MAINTAIN = "down"
+)
+
+const (
+	NODE_FAE   = "fae"
+	NODE_ACTOR = "actor"
 )
 
 const (
@@ -18,5 +23,5 @@ const (
 )
 
 const (
-	NODE_PING_INTERVAL = 1
+	NODE_PING_INTERVAL = 60 // in seconds
 )
