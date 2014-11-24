@@ -14,6 +14,11 @@ func TestKeyPath(t *testing.T) {
 	assert.Equal(t, "/proj/dw/maintain", keyPath("maintain"))
 }
 
+func TestNodeName(t *testing.T) {
+	nodePath := "/proj/dw/fae/localhost:9001"
+	assert.Equal(t, "localhost:9001", nodeName(nodePath))
+}
+
 func TestNodePath(t *testing.T) {
 	project = "dw"
 	assert.Equal(t, "/proj/dw/node/fae/12.32.1.5:9001",

@@ -1,5 +1,9 @@
 package etclib
 
+import (
+	"strings"
+)
+
 func keyPath(path ...string) string {
 	if project == "" {
 		panic("empty project name")
@@ -23,4 +27,9 @@ func nodeRoot(nodeType string) string {
 
 func projectPath() string {
 	return "/" + DIR_PROJECT + "/" + project
+}
+
+func nodeName(nodePath string) string {
+	s := strings.Split(nodePath, "/")
+	return s[len(s)-1]
 }

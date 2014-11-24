@@ -26,33 +26,66 @@ func Init(servers []string, projectName string) {
 	client.CreateDir(keyPath(DIR_MAINTAIN), 0)
 }
 
-func bootNode(nodeType, nodeAddr string) {
+func setNodeStatus(nodeType, nodeAddr, status string) {
 	if client == nil {
 		panic("Call Init before this")
 	}
 
-	ticker := time.NewTicker(time.Duration(NODE_PING_INTERVAL-4) * time.Second)
-	defer ticker.Stop()
+	key := nodePath(nodeType, nodeAddr)
+	log.Debug("node[%s]: %s", key, status)
+	client.Set(key, status, NODE_PING_INTERVAL)
 
-	for _ = range ticker.C {
-		_, err := client.Set(keyPath(nodeType, nodeAddr),
-			STATUS_ALIVE, NODE_PING_INTERVAL)
-		if err != nil {
-			log.Error("%s[%s] config: %s", nodeType, nodeAddr, err.Error())
-			return
+	go func(key string) {
+		ticker := time.NewTicker(time.Duration(NODE_PING_INTERVAL-4) * time.Second)
+		defer ticker.Stop()
+
+		for _ = range ticker.C {
+			_, err := client.Set(key, status, NODE_PING_INTERVAL)
+			if err != nil {
+				log.Error("node[%s]: %s", key, err.Error())
+				return
+			}
 		}
+	}(key)
+}
+
+func deleteNode(nodeType, nodeAddr string) {
+	if client == nil {
+		panic("Call Init before this")
 	}
+
+	key := nodePath(nodeType, nodeAddr)
+	log.Debug("node[%s]: deleted", key)
+	client.Delete(key, false)
 }
 
 func BootFae(addr string) {
-	bootNode(NODE_FAE, addr)
+	setNodeStatus(NODE_FAE, addr, STATUS_ALIVE)
+}
+
+func ShutdownFae(addr string) {
+	deleteNode(NODE_FAE, addr)
 }
 
 func BootActor(addr string) {
-	bootNode(NODE_ACTOR, addr)
+	setNodeStatus(NODE_ACTOR, addr, STATUS_ALIVE)
 }
 
-func ClusterNodes(nodeType string) {
+func ShutdownActor(addr string) {
+	deleteNode(NODE_ACTOR, addr)
+}
+
+func ClusterNodes(nodeType string) ([]string, error) {
 	key := nodeRoot(nodeType)
 	resp, err := client.Get(key, false, true)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := make([]string, 0)
+	for _, node := range resp.Node.Nodes {
+		nodes = append(nodes, nodeName(node.Key))
+	}
+
+	return nodes, nil
 }

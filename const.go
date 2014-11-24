@@ -4,12 +4,12 @@ const (
 	DIR_PROJECT = "proj"
 	DIR_NODES   = "node"
 
-	DIR_MAINTAIN = "down"
+	DIR_MAINTAIN = "maintain"
 )
 
 const (
 	NODE_FAE   = "fae"
-	NODE_ACTOR = "actor"
+	NODE_ACTOR = "act"
 )
 
 const (
@@ -23,5 +23,5 @@ const (
 )
 
 const (
-	NODE_PING_INTERVAL = 60 // in seconds
+	NODE_PING_INTERVAL = 600 // in seconds
 )
