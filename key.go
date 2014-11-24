@@ -25,6 +25,10 @@ func nodeRoot(nodeType string) string {
 	return keyPath(DIR_NODES, nodeType)
 }
 
+func maintainRoot() string {
+	return keyPath(DIR_MAINTAIN)
+}
+
 func projectPath() string {
 	return "/" + DIR_PROJECT + "/" + project
 }

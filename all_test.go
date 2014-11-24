@@ -17,6 +17,12 @@ func TestKeyPath(t *testing.T) {
 func TestNodeName(t *testing.T) {
 	nodePath := "/proj/dw/fae/localhost:9001"
 	assert.Equal(t, "localhost:9001", nodeName(nodePath))
+	nodePath = "/proj/dw/maintain/kingdom_1"
+	assert.Equal(t, "kingdom_1", nodeName(nodePath))
+}
+
+func TestMaintainRoot(t *testing.T) {
+	assert.Equal(t, "/proj/dw/maintain", maintainRoot())
 }
 
 func TestNodePath(t *testing.T) {
@@ -27,7 +33,7 @@ func TestNodePath(t *testing.T) {
 
 func TestNodeRoot(t *testing.T) {
 	project = "dw"
-	assert.Equal(t, "/proj/dw/node/actor", nodeRoot(NODE_ACTOR))
+	assert.Equal(t, "/proj/dw/node/act", nodeRoot(NODE_ACTOR))
 }
 
 func BenchmarkKeyPath(b *testing.B) {

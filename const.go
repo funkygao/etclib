@@ -20,6 +20,8 @@ const (
 )
 
 const (
-	NODE_EVT_BOOT     = "boot"
-	NODE_EVT_SHUTDOWN = "shutdown"
+	NODE_EVT_BOOT           = "boot"
+	NODE_EVT_SHUTDOWN       = "shutdown"
+	MAINTAIN_EVT_MAINTAIN   = "maintain"
+	MAINTAIN_EVT_UNMAINTAIN = "unmaintain"
 )

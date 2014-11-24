@@ -92,6 +92,23 @@ func ClusterNodes(nodeType string) ([]string, error) {
 	return nodes, nil
 }
 
+// who are under maintenance
+func MaintainInfo() ([]string, error) {
+	resp, err := client.Get(maintainRoot(), false, true)
+	if err != nil {
+		return nil, err
+	}
+
+	info := make([]string, 0)
+	for _, node := range resp.Node.Nodes {
+		if node.Value == MAINTAIN_EVT_MAINTAIN {
+			info = append(info, node.Key)
+		}
+	}
+
+	return info, nil
+}
+
 func WatchFaeNodes() (ch chan NodeEvent) {
 	return watchNodes(NODE_FAE)
 }
@@ -100,26 +117,56 @@ func WatchActorNodes() (ch chan NodeEvent) {
 	return watchNodes(NODE_ACTOR)
 }
 
-func watchNodes(nodeType string) (ch chan NodeEvent) {
-	ch = make(chan NodeEvent, 10)
-
+func WatchMaintain() (ch chan MaintainEvent) {
+	ch = make(chan MaintainEvent, 10)
 	watchChan := make(chan *etcd.Response)
-	go client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
+	go client.Watch(maintainRoot(), 0, true, watchChan, nil)
 
 	go func() {
-		var evtType string
 		for evt := range watchChan {
 			log.Debug("event[%s] %+v", evt.Action, *evt.Node)
 
 			switch evt.Action {
 			case "set", "create":
-				evtType = NODE_EVT_BOOT
+				ch <- MaintainEvent{Key: nodeName(evt.Node.Key),
+					Value: MAINTAIN_EVT_MAINTAIN}
+
+			case "delete":
+				ch <- MaintainEvent{Key: nodeName(evt.Node.Key),
+					Value: MAINTAIN_EVT_UNMAINTAIN}
+			}
+		}
+	}()
+
+	return
+}
+
+func watchNodes(nodeType string) (ch chan NodeEvent) {
+	ch = make(chan NodeEvent, 10)
+	if _, present := nodes[nodeType]; !present {
+		nodes[nodeType] = make(map[string]bool)
+	}
+
+	watchChan := make(chan *etcd.Response)
+	go client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
+
+	go func() {
+		for evt := range watchChan {
+			switch evt.Action {
+			case "set", "create":
+				if _, present := nodes[nodeType][evt.Node.Key]; !present {
+					nodes[nodeType][evt.Node.Key] = true
+
+					ch <- NodeEvent{Addr: nodeName(evt.Node.Key),
+						EventType: NODE_EVT_BOOT, NodeType: nodeType}
+				}
 
 			case "delete", "expire":
-				evtType = NODE_EVT_SHUTDOWN
+				delete(nodes[nodeType], evt.Node.Key)
+				ch <- NodeEvent{Addr: nodeName(evt.Node.Key),
+					EventType: NODE_EVT_SHUTDOWN, NodeType: nodeType}
 			}
 
-			ch <- NodeEvent{Addr: nodeName(evt.Node.Key), EventType: evtType}
 		}
 	}()
 
