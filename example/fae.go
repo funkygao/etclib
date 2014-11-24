@@ -20,5 +20,10 @@ func main() {
 	}
 
 	log.Info("fae nodes: %+v", nodes)
-	<-make(chan interface{})
+	log.Info("watch for nodes changes...")
+
+	for evt := range etclib.WatchFaeNodes() {
+		log.Info("%+v", evt)
+	}
+
 }

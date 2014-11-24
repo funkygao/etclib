@@ -1,10 +1,6 @@
 package etclib
 
-import (
-	"time"
-)
-
 type Node struct {
-	addr         string
-	lastSyncTime time.Time
+	Addr string
+	Boot bool // True if new node intanced added, else an existing node shutdown
 }
