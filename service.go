@@ -24,6 +24,8 @@ func Init(servers []string, projectName string) {
 	}
 
 	client.CreateDir(keyPath(DIR_MAINTAIN), 0)
+
+	log.Debug("etcd[%s] connected with %+v", project, servers)
 }
 
 func setNodeStatus(nodeType, nodeAddr, status string) {
@@ -32,7 +34,7 @@ func setNodeStatus(nodeType, nodeAddr, status string) {
 	}
 
 	key := nodePath(nodeType, nodeAddr)
-	log.Debug("node[%s]: %s", key, status)
+	log.Debug("etcd[%s] node[%s] -> %s", project, key, status)
 	client.Set(key, status, NODE_PING_INTERVAL)
 
 	go func(key string) {
@@ -42,7 +44,7 @@ func setNodeStatus(nodeType, nodeAddr, status string) {
 		for _ = range ticker.C {
 			_, err := client.Set(key, status, NODE_PING_INTERVAL)
 			if err != nil {
-				log.Error("node[%s]: %s", key, err.Error())
+				log.Error("etcd[%s] node[%s]: %s", project, key, err.Error())
 				return
 			}
 		}
@@ -55,7 +57,7 @@ func deleteNode(nodeType, nodeAddr string) {
 	}
 
 	key := nodePath(nodeType, nodeAddr)
-	log.Debug("node[%s]: deleted", key)
+	log.Debug("etcd[%s] node[%s] -> shutdown", project, key)
 	client.Delete(key, false)
 }
 

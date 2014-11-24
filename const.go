@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	NODE_PING_INTERVAL = 600 // in seconds
+	NODE_PING_INTERVAL = 30 // in seconds
 )
 
 const (
