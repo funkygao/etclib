@@ -42,6 +42,8 @@ func setNodeStatus(nodeType, nodeAddr, status string) {
 		defer ticker.Stop()
 
 		for _ = range ticker.C {
+			log.Debug("etcd[%s] node[%s] heartbeat", project, key)
+
 			_, err := client.Set(key, status, NODE_PING_INTERVAL)
 			if err != nil {
 				log.Error("etcd[%s] node[%s]: %s", project, key, err.Error())
@@ -148,6 +150,7 @@ func watchNodes(nodeType string) (ch chan NodeEvent) {
 	}
 
 	watchChan := make(chan *etcd.Response)
+	// http long polling, auto reconnect HTTP
 	go client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
 
 	go func() {
