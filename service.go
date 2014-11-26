@@ -38,6 +38,7 @@ func setNodeStatus(nodeType, nodeAddr, status string) {
 	client.Set(key, status, NODE_PING_INTERVAL)
 
 	go func(key string) {
+		// ttl=30，那么应该还是每30s去renew，但提前4s FIXME
 		ticker := time.NewTicker(time.Duration(NODE_PING_INTERVAL-4) * time.Second)
 		defer ticker.Stop()
 
