@@ -1,17 +1,22 @@
 package etclib
 
 import (
-	"github.com/coreos/go-etcd/etcd"
+	"errors"
+	"github.com/funkygao/go-etcd/etcd"
 	log "github.com/funkygao/log4go"
 	"time"
 )
 
-func Init(servers []string, projectName string) {
+func Init(servers []string, projectName string) error {
 	project = projectName
 
 	client = etcd.NewClient(servers)
 	client.SetConsistency(etcd.STRONG_CONSISTENCY)
 	client.SetDialTimeout(time.Second * 4)
+	if ok := client.SetCluster(servers); !ok {
+		log.Error("failed to connect etcd cluster: %+v", servers)
+		return errors.New("failed to connect etcd cluster")
+	}
 
 	// create all root dirs, ignore prevExist err
 	var (
@@ -26,6 +31,8 @@ func Init(servers []string, projectName string) {
 	client.CreateDir(keyPath(DIR_MAINTAIN), 0)
 
 	log.Debug("etcd[%s] connected with %+v", project, servers)
+
+	return nil
 }
 
 func setNodeStatus(nodeType, nodeAddr, status string) {
@@ -172,6 +179,12 @@ func watchNodes(nodeType string) (ch chan NodeEvent) {
 		for {
 			_, err := client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
 			if err != nil {
+				// FIXME
+				// e,g. Unexpected end of JSON input
+				// due to the etcd watch closing prematurely
+				// https://github.com/coreos/go-etcd/pull/145
+				// https://github.com/coreos/go-etcd/issues/160
+				// For some reason etcd can and will send an empty body which would cause unmarshaling issues for the watch.
 				log.Error("watch node[%s]: %s", nodeType, err)
 			}
 		}

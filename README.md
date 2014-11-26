@@ -50,3 +50,7 @@ shared config service lib integrated with etcd
     Transfer-Encoding: chunked
     
     [11/26/14 18:25:34 CST] [EROR] (    service.go:175) watch node[act]: unexpected end of JSON input
+
+### todo
+
+    https://github.com/kelseyhightower/confd

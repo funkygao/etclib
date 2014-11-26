@@ -1,7 +1,7 @@
 package etclib
 
 import (
-	"github.com/coreos/go-etcd/etcd"
+	"github.com/funkygao/go-etcd/etcd"
 )
 
 var (
