@@ -34,3 +34,19 @@ shared config service lib integrated with etcd
         |   |   
         │   └── xxx
            
+
+
+### watch fails
+
+    GET /v2/keys/proj/dw/node/act?consistent=true&recursive=true&wait=true HTTP/1.1 
+    
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    X-Etcd-Cluster-Id: 7e27652122e8b2ae
+    X-Etcd-Index: 2506
+    X-Raft-Index: 348157
+    X-Raft-Term: 1
+    Date: Wed, 26 Nov 2014 10:25:34 GMT
+    Transfer-Encoding: chunked
+    
+    [11/26/14 18:25:34 CST] [EROR] (    service.go:175) watch node[act]: unexpected end of JSON input
