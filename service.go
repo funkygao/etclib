@@ -132,10 +132,13 @@ func WatchMaintain() (ch chan MaintainEvent) {
 
 	go func() {
 		// TODO add waitIndex to catchup
-		_, err := client.Watch(maintainRoot(), 0, true, watchChan, nil)
-		if err != nil {
-			log.Error(err)
+		for {
+			_, err := client.Watch(maintainRoot(), 0, true, watchChan, nil)
+			if err != nil {
+				log.Error("watch maintain: %s", err)
+			}
 		}
+
 	}()
 
 	go func() {
@@ -166,9 +169,11 @@ func watchNodes(nodeType string) (ch chan NodeEvent) {
 	watchChan := make(chan *etcd.Response)
 	// http long polling, auto reconnect HTTP
 	go func() {
-		_, err := client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
-		if err != nil {
-			log.Error("node err: %s", err)
+		for {
+			_, err := client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
+			if err != nil {
+				log.Error("watch node[%s]: %s", nodeType, err)
+			}
 		}
 	}()
 
