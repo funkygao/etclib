@@ -35,7 +35,10 @@ func setNodeStatus(nodeType, nodeAddr, status string) {
 
 	key := nodePath(nodeType, nodeAddr)
 	log.Debug("etcd[%s] node[%s] -> %s", project, key, status)
-	client.Set(key, status, NODE_PING_INTERVAL)
+	_, err := client.Set(key, status, NODE_PING_INTERVAL)
+	if err != nil {
+		log.Error("etcd[%s] node[%s]: %s", project, key, err.Error())
+	}
 
 	go func(key string) {
 		// ttl=30，那么应该还是每30s去renew，但提前4s FIXME
@@ -61,7 +64,10 @@ func deleteNode(nodeType, nodeAddr string) {
 
 	key := nodePath(nodeType, nodeAddr)
 	log.Debug("etcd[%s] node[%s] -> shutdown", project, key)
-	client.Delete(key, false)
+	_, err := client.Delete(key, false)
+	if err != nil {
+		log.Error("etcd[%s] node[%s]: %s", project, key, err.Error())
+	}
 }
 
 func BootFae(addr string) {
@@ -123,7 +129,14 @@ func WatchActorNodes() (ch chan NodeEvent) {
 func WatchMaintain() (ch chan MaintainEvent) {
 	ch = make(chan MaintainEvent, 10)
 	watchChan := make(chan *etcd.Response)
-	go client.Watch(maintainRoot(), 0, true, watchChan, nil)
+
+	go func() {
+		// TODO add waitIndex to catchup
+		_, err := client.Watch(maintainRoot(), 0, true, watchChan, nil)
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 
 	go func() {
 		for evt := range watchChan {
@@ -152,7 +165,12 @@ func watchNodes(nodeType string) (ch chan NodeEvent) {
 
 	watchChan := make(chan *etcd.Response)
 	// http long polling, auto reconnect HTTP
-	go client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
+	go func() {
+		_, err := client.Watch(nodeRoot(nodeType), 0, true, watchChan, nil)
+		if err != nil {
+			log.Error("node err: %s", err)
+		}
+	}()
 
 	go func() {
 		for evt := range watchChan {
