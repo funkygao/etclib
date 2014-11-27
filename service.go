@@ -117,9 +117,7 @@ func MaintainInfo() ([]string, error) {
 
 	info := make([]string, 0)
 	for _, node := range resp.Node.Nodes {
-		if node.Value == MAINTAIN_EVT_MAINTAIN {
-			info = append(info, node.Key)
-		}
+		info = append(info, node.Key+":"+node.Value) // kingdom_1:30
 	}
 
 	return info, nil
