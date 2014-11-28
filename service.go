@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Init(servers []string, projectName string) error {
+func Dial(servers []string, projectName string) error {
 	project = projectName
 
 	client = etcd.NewClient(servers)

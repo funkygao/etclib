@@ -1,29 +1,33 @@
 package main
 
 import (
+	"fmt"
 	"github.com/funkygao/etclib"
-	log "github.com/funkygao/log4go"
 )
 
 func main() {
-	etclib.Init([]string{"http://127.0.0.1:4001"}, "dw")
-	log.Debug("init done")
+	if err := etclib.Dial([]string{"http://127.0.0.1:4001"}, "dw"); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("init done")
 
 	etclib.BootFae("localhost:9001")
 	etclib.ShutdownActor("localhost:9002")
 
-	log.Debug("getting cluster nodes...")
+	fmt.Println("getting cluster nodes...")
 	nodes, err := etclib.ClusterNodes(etclib.NODE_FAE)
 	if err != nil {
-		log.Error(err)
+		fmt.Println(err)
 		return
 	}
 
-	log.Info("fae nodes: %+v", nodes)
-	log.Info("watch for nodes changes...")
+	fmt.Printf("fae nodes: %+v\n", nodes)
+	fmt.Println("watch for nodes changes...")
 
 	for evt := range etclib.WatchFaeNodes() {
-		log.Info("%+v", evt)
+		fmt.Printf("%+v\n", evt)
 	}
 
 }
