@@ -1,6 +1,10 @@
 package etclib
 
 const (
+	DIAL_TIMEOUT = 4
+)
+
+const (
 	DIR_PROJECT  = "proj"
 	DIR_NODES    = "node"
 	DIR_MAINTAIN = "maintain"

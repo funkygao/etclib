@@ -8,13 +8,16 @@ import (
 )
 
 func Dial(servers []string, projectName string) error {
+	return DialTimeout(servers, DIAL_TIMEOUT, projectName)
+}
+
+func DialTimeout(servers []string, timeout int64, projectName string) error {
 	project = projectName
 
 	client = etcd.NewClient(servers)
 	client.SetConsistency(etcd.STRONG_CONSISTENCY)
-	client.SetDialTimeout(time.Second * 4)
+	client.SetDialTimeout(time.Second * time.Duration(timeout))
 	if ok := client.SetCluster(servers); !ok {
-		log.Error("failed to connect etcd cluster: %+v", servers)
 		return errors.New("failed to connect etcd cluster")
 	}
 
