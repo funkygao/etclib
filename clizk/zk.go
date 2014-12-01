@@ -6,8 +6,7 @@ import (
 )
 
 type CliZk struct {
-	client  *zk.Conn
-	project string
+	client *zk.Conn
 }
 
 func New() *CliZk {
@@ -22,19 +21,30 @@ func (this *CliZk) PrepareDirs(dirs ...string) {
 	}
 }
 
-func (this *CliZk) DialTimeout(servers []string,
-	timeout time.Duration, projectName string) error {
+func (this *CliZk) DialTimeout(servers []string, timeout time.Duration) error {
 	client, _, err := zk.Connect(servers, timeout)
 	if err != nil {
 		return err
 	}
 
 	this.client = client
-	this.project = projectName
 
 	return nil
 }
 
 func (this *CliZk) Close() {
 	this.client.Close()
+}
+
+func (this *CliZk) ChildrenKeys(parentKey string) ([]string, error) {
+	keys, _, err := this.client.Children(parentKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}
+
+func (this *CliZk) Delete(key string) error {
+	return this.client.Delete(key, 0)
 }
