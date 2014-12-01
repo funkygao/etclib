@@ -13,10 +13,11 @@ zookeeper
     mkdir -p $ZK_BASE/var/zookeeper/{data,conf}
     echo -n $MYID > $ZK_BASE/var/zookeeper/data/myid
     cat > $ZK_BASE/var/zookeeper/conf/zoo.cfg <<EOF
-    tickTime=2000
+    tickTime=2000 # in ms, s-s/c-s heartbeat interval
     initLimit=10
     syncLimit=5
     dataDir=$ZK_BASE/var/zookeeper/data
+    dataLogDir=$ZK_BASE/var/zookeeper/dataLog
     clientPort=2181
     server.1=192.168.12.11:2888:3888
     server.2=192.168.12.12:2888:3888

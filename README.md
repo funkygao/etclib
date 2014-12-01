@@ -54,3 +54,4 @@ shared config service lib integrated with etcd
 ### todo
 
     https://github.com/kelseyhightower/confd
+    fae node has weight
