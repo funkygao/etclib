@@ -15,17 +15,6 @@ func New() *CliZk {
 	return &CliZk{}
 }
 
-func (this *CliZk) PrepareDirs(dirs ...string) {
-	flags := int32(zk.FlagEphemeral)
-	for _, dir := range dirs {
-		this.client.Create(dir, []byte(""), flags, this.defaultAcls())
-	}
-}
-
-func (this *CliZk) defaultAcls() []zk.ACL {
-	return zk.WorldACL(zk.PermAll)
-}
-
 // servers item is like ip:port
 func (this *CliZk) DialTimeout(servers []string, timeout time.Duration) error {
 	client, _, err := zk.Connect(servers, timeout)
@@ -100,4 +89,12 @@ func (this *CliZk) Children(parentKey string) ([]string, error) {
 
 func (this *CliZk) Delete(key string) error {
 	return this.client.Delete(key, -1)
+}
+
+func (this *CliZk) NodeExistsError(err error) bool {
+	return err == zk.ErrNodeExists
+}
+
+func (this *CliZk) defaultAcls() []zk.ACL {
+	return zk.WorldACL(zk.PermAll)
 }
