@@ -1,8 +1,15 @@
 package etclib
 
+import (
+	"errors"
+)
+
 var (
-	client  Client
-	project string
+	store Backend
 
 	nodes map[string]map[string]bool = make(map[string]map[string]bool)
+)
+
+var (
+	ErrInvalidService = errors.New("Invalid service type")
 )

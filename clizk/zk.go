@@ -1,28 +1,39 @@
 package clizk
 
 import (
+	log "github.com/funkygao/log4go"
 	"github.com/samuel/go-zookeeper/zk"
 	"sync"
 	"time"
 )
 
 type CliZk struct {
-	mu     sync.Mutex
-	client *zk.Conn
+	mu           sync.Mutex
+	servers      []string
+	timeout      time.Duration
+	sessionEvent <-chan zk.Event
+	clientRedial chan bool
+	client       *zk.Conn
 }
 
 func New() *CliZk {
 	return &CliZk{}
 }
 
-// servers item is like ip:port
+// TODO auto handles session timeout
 func (this *CliZk) DialTimeout(servers []string, timeout time.Duration) error {
-	client, _, err := zk.Connect(servers, timeout)
+	client, sessionChan, err := zk.Connect(servers, timeout)
 	if err != nil {
 		return err
 	}
 
+	this.clientRedial = make(chan bool)
 	this.client = client
+	this.servers = servers
+	this.timeout = timeout
+	this.sessionEvent = sessionChan
+
+	go this.runWatchdog()
 
 	return nil
 }
@@ -38,6 +49,7 @@ func (this *CliZk) Close() {
 
 	this.client.Close()
 	this.client = nil
+	close(this.clientRedial)
 }
 
 // not recursive
@@ -78,8 +90,8 @@ func (this *CliZk) Set(path, value string) error {
 	return err
 }
 
-func (this *CliZk) Children(parentKey string) ([]string, error) {
-	keys, _, err := this.client.Children(parentKey)
+func (this *CliZk) Children(path string) ([]string, error) {
+	keys, _, err := this.client.Children(path)
 	if err != nil {
 		return nil, err
 	}
@@ -91,10 +103,58 @@ func (this *CliZk) Delete(key string) error {
 	return this.client.Delete(key, -1)
 }
 
+func (this *CliZk) WatchChildren(path string, ch chan []string) (err error) {
+	var (
+		children     []string
+		watchEvtChan <-chan zk.Event
+	)
+
+	children, _, watchEvtChan, err = this.client.ChildrenW(path)
+	go func() {
+		for {
+			select {
+			case <-watchEvtChan:
+				ch <- children
+
+				children, _, watchEvtChan, err = this.client.ChildrenW(path)
+			}
+		}
+	}()
+	ch <- children
+	return err
+}
+
 func (this *CliZk) NodeExistsError(err error) bool {
 	return err == zk.ErrNodeExists
 }
 
 func (this *CliZk) defaultAcls() []zk.ACL {
 	return zk.WorldACL(zk.PermAll)
+}
+
+func (this *CliZk) runWatchdog() {
+	var (
+		evt zk.Event
+		err error
+	)
+
+	for {
+		select {
+		case evt = <-this.sessionEvent:
+			if evt.Type == zk.EventSession && evt.State == zk.StateExpired {
+				this.Close()
+
+				// redial
+				err = this.DialTimeout(this.servers, this.timeout)
+				if err != nil {
+					log.Error("zk[%+v]: %s", this.servers, err)
+					return
+				}
+
+				// notify other goroutins
+				this.clientRedial <- true
+			}
+		}
+	}
+
 }
