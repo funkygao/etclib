@@ -72,16 +72,12 @@ func Create(path string, value string, flags int32) error {
 	return store.Create(path, value, flags)
 }
 
-func Set(path, value string) error {
-	return store.Set(path, value)
-}
-
 func Delete(path string) error {
 	return store.Delete(path)
 }
 
-func Get(path string) (string, error) {
-	return store.Get(path)
+func Children(path string) ([]string, error) {
+	return store.Children(path)
 }
 
 func checkService(service string) error {
