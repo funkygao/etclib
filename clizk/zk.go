@@ -20,8 +20,12 @@ func New() *CliZk {
 	return &CliZk{}
 }
 
-// TODO auto handles session timeout
 func (this *CliZk) DialTimeout(servers []string, timeout time.Duration) error {
+	if this.client != nil {
+		log.Warn("zk[%+v] dial while already connected", servers)
+		return nil
+	}
+
 	client, sessionChan, err := zk.Connect(servers, timeout)
 	if err != nil {
 		return err
