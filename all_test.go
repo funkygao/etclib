@@ -5,41 +5,30 @@ import (
 	"testing"
 )
 
-func TestKeyPath(t *testing.T) {
-	project = "dw"
-	assert.Equal(t, "/proj/dw/fae/12.12.21.21:1922",
-		keyPath("fae", "12.12.21.21:1922"))
-	assert.Equal(t, "/proj/dw/node/fae/33.31.12.54:1233",
-		keyPath(DIR_NODES, "fae", "33.31.12.54:1233"))
-	assert.Equal(t, "/proj/dw/maintain", keyPath("maintain"))
-}
+func TestFae(t *testing.T) {
+	defer Close()
+	err := Dial([]string{"127.0.0.1:2181"})
+	assert.Equal(t, nil, err)
+	BootService("182.11.33.11:9001", SERVICE_FAE)
+	endpoints, err := ServiceEndpoints(SERVICE_FAE)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 1, len(endpoints))
+	t.Logf("%+v", endpoints)
 
-func TestNodeName(t *testing.T) {
-	nodePath := "/proj/dw/fae/localhost:9001"
-	assert.Equal(t, "localhost:9001", nodeName(nodePath))
-	nodePath = "/proj/dw/maintain/kingdom_1"
-	assert.Equal(t, "kingdom_1", nodeName(nodePath))
-}
+	BootService("182.11.33.12:9001", SERVICE_FAE)
+	endpoints, err = ServiceEndpoints(SERVICE_FAE)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 2, len(endpoints))
+	t.Logf("%+v", endpoints)
 
-func TestMaintainRoot(t *testing.T) {
-	assert.Equal(t, "/proj/dw/maintain", maintainRoot())
-}
+	ShutdownService("182.11.33.12:9001", SERVICE_FAE)
+	endpoints, err = ServiceEndpoints(SERVICE_FAE)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 1, len(endpoints))
 
-func TestNodePath(t *testing.T) {
-	project = "dw"
-	assert.Equal(t, "/proj/dw/node/fae/12.32.1.5:9001",
-		nodePath("fae", "12.32.1.5:9001"))
-}
+	ShutdownService("182.11.33.11:9001", SERVICE_FAE)
+	endpoints, err = ServiceEndpoints(SERVICE_FAE)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 0, len(endpoints))
 
-func TestNodeRoot(t *testing.T) {
-	project = "dw"
-	assert.Equal(t, "/proj/dw/node/act", nodeRoot(NODE_ACTOR))
-}
-
-func BenchmarkKeyPath(b *testing.B) {
-	project = "dw"
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		keyPath("fae", "12.12.21.21:1922")
-	}
 }

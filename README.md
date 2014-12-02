@@ -51,6 +51,19 @@ shared config service lib integrated with etcd
     
     [11/26/14 18:25:34 CST] [EROR] (    service.go:175) watch node[act]: unexpected end of JSON input
 
+### zk
+
+* core of zk is atomic broadcast
+  - zab
+* znode type
+  - PERSISTENT
+  - PERSISTENT_SEQUENTIAL
+  - EPHEMERAL
+  - EPHEMERAL_SEQUENTIAL
+* EPHEMERAL znode can't have child znode, persistent znode can
+* watch is once triggered
+
 ### todo
 
     https://github.com/kelseyhightower/confd
+    fae node has weight
