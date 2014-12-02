@@ -8,6 +8,7 @@ import (
 
 func TestChildren(t *testing.T) {
 	cli := New()
+	defer cli.Close()
 	cli.DialTimeout([]string{"127.0.0.1:2181"}, time.Second)
 	keys, err := cli.Children("/")
 	assert.Equal(t, nil, err)
@@ -16,6 +17,7 @@ func TestChildren(t *testing.T) {
 
 func TestCRUD(t *testing.T) {
 	cli := New()
+	defer cli.Close()
 	cli.DialTimeout([]string{"127.0.0.1:2181"}, time.Second)
 	cli.CreateOrUpdate("/zktest", "foo,bar", 0)
 	val, err := cli.Get("/zktest")
@@ -33,10 +35,13 @@ func TestCRUD(t *testing.T) {
 
 	_, err = cli.Get("/zktest") // zk: node does not exist
 	assert.NotEqual(t, nil, err)
+
+	cli.Close() // close can be called many times
 }
 
 func BenchmarkGet(b *testing.B) {
 	cli := New()
+	defer cli.Close()
 	cli.DialTimeout([]string{"127.0.0.1:2181"}, time.Second)
 	cli.CreateOrUpdate("/zktest", "foo,bar", 0)
 
@@ -44,4 +49,6 @@ func BenchmarkGet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		cli.Get("/zktest")
 	}
+
+	cli.Close()
 }

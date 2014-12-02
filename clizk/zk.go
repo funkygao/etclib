@@ -2,10 +2,12 @@ package clizk
 
 import (
 	"github.com/samuel/go-zookeeper/zk"
+	"sync"
 	"time"
 )
 
 type CliZk struct {
+	mu     sync.Mutex
 	client *zk.Conn
 }
 
@@ -36,8 +38,17 @@ func (this *CliZk) DialTimeout(servers []string, timeout time.Duration) error {
 	return nil
 }
 
+// reentrant safe
 func (this *CliZk) Close() {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	if this.client == nil {
+		return
+	}
+
 	this.client.Close()
+	this.client = nil
 }
 
 // not recursive
