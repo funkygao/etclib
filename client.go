@@ -16,6 +16,7 @@ type Backend interface {
 	Set(path, value string) error
 	Children(parentKey string) ([]string, error)
 	Delete(key string) error
+	Get(key string) (string, error)
 
 	/*
 		BootFae(addr string)

@@ -69,6 +69,22 @@ func WatchService(service string, ch chan []string) (err error) {
 	return store.WatchChildren("/"+service, ch)
 }
 
+func Create(path string, value string, flags int32) error {
+	return store.Create(path, value, flags)
+}
+
+func Set(path, value string) error {
+	return store.Set(path, value)
+}
+
+func Delete(path string) error {
+	return store.Delete(path)
+}
+
+func Get(path string) (string, error) {
+	return store.Get(path)
+}
+
 func checkService(service string) error {
 	if service != SERVICE_ACTOR && service != SERVICE_FAE {
 		return ErrInvalidService

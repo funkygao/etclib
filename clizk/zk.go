@@ -99,8 +99,8 @@ func (this *CliZk) Children(path string) ([]string, error) {
 	return keys, nil
 }
 
-func (this *CliZk) Delete(key string) error {
-	return this.client.Delete(key, -1)
+func (this *CliZk) Delete(path string) error {
+	return this.client.Delete(path, -1)
 }
 
 func (this *CliZk) WatchChildren(path string, ch chan []string) (err error) {
