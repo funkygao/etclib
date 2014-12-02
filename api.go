@@ -2,7 +2,6 @@ package etclib
 
 import (
 	"github.com/funkygao/etclib/clizk"
-	//log "github.com/funkygao/log4go"
 	"time"
 )
 
