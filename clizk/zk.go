@@ -12,7 +12,6 @@ type CliZk struct {
 	servers      []string
 	timeout      time.Duration
 	sessionEvent <-chan zk.Event
-	clientRedial chan bool
 	client       *zk.Conn
 }
 
@@ -20,26 +19,24 @@ func New() *CliZk {
 	return &CliZk{}
 }
 
-func (this *CliZk) DialTimeout(servers []string, timeout time.Duration) error {
+func (this *CliZk) DialTimeout(servers []string,
+	timeout time.Duration) (err error) {
 	if this.client != nil {
 		log.Warn("zk[%+v] dial while already connected", servers)
 		return nil
 	}
 
-	client, sessionChan, err := zk.Connect(servers, timeout)
+	this.client, this.sessionEvent, err = zk.Connect(servers, timeout)
 	if err != nil {
-		return err
+		return
 	}
 
-	this.clientRedial = make(chan bool)
-	this.client = client
 	this.servers = servers
 	this.timeout = timeout
-	this.sessionEvent = sessionChan
 
 	go this.runWatchdog()
 
-	return nil
+	return
 }
 
 // reentrant safe
@@ -53,7 +50,6 @@ func (this *CliZk) Close() {
 
 	this.client.Close()
 	this.client = nil
-	close(this.clientRedial)
 }
 
 // not recursive
@@ -161,8 +157,6 @@ func (this *CliZk) runWatchdog() {
 					log.Trace("zk[%+v] redialed ok", this.servers)
 				}
 
-				// notify other goroutins
-				this.clientRedial <- true
 			}
 		}
 	}
