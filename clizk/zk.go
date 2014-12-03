@@ -117,7 +117,11 @@ func (this *CliZk) WatchChildren(path string, ch chan []string) (err error) {
 	go func() {
 		for {
 			select {
-			case <-watchEvtChan:
+			case evt := <-watchEvtChan:
+				log.Trace("zk event: {%s %s %s}",
+					evt.Path,
+					evt.Type.String(), evt.State.String())
+
 				ch <- children
 
 				children, _, watchEvtChan, err = this.client.ChildrenW(path)
@@ -153,6 +157,8 @@ func (this *CliZk) runWatchdog() {
 				if err != nil {
 					log.Error("zk[%+v]: %s", this.servers, err)
 					return
+				} else {
+					log.Trace("zk[%+v] redialed ok", this.servers)
 				}
 
 				// notify other goroutins
