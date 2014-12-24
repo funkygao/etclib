@@ -13,10 +13,11 @@ type CliZk struct {
 	timeout      time.Duration
 	sessionEvent <-chan zk.Event
 	client       *zk.Conn
+	quit         chan bool
 }
 
 func New() *CliZk {
-	return &CliZk{}
+	return &CliZk{quit: make(chan bool)}
 }
 
 func (this *CliZk) DialTimeout(servers []string,
@@ -33,8 +34,6 @@ func (this *CliZk) DialTimeout(servers []string,
 
 	this.servers = servers
 	this.timeout = timeout
-
-	go this.runWatchdog()
 
 	return
 }
@@ -110,20 +109,50 @@ func (this *CliZk) WatchChildren(path string, ch chan []string) (err error) {
 	)
 
 	children, _, watchEvtChan, err = this.client.ChildrenW(path)
+
 	go func() {
 		for {
 			select {
 			case evt := <-watchEvtChan:
-				log.Trace("zk event: {%s %s %s}",
+				log.Trace("zk event: watch{%s %s %s}",
 					evt.Path,
 					evt.Type.String(), evt.State.String())
 
-				ch <- children
+				if evt.Type == zk.EventNodeChildrenChanged {
+					ch <- children
+					children, _, watchEvtChan, err = this.client.ChildrenW(path)
+					log.Trace("zk[%+v] renew children watch", this.servers)
+				}
 
-				children, _, watchEvtChan, err = this.client.ChildrenW(path)
+			case evt := <-this.sessionEvent:
+				if evt.Type == zk.EventSession && evt.State == zk.StateExpired {
+					log.Trace("zk event: session{%s %s}",
+						evt.Type.String(), evt.State.String())
+
+					this.Close()
+
+					// redial
+					for {
+						err = this.DialTimeout(this.servers, this.timeout)
+						if err != nil {
+							log.Error("zk[%+v]: %s", this.servers, err)
+							this.Close()
+						} else {
+							log.Trace("zk[%+v] redialed ok", this.servers)
+							children, _, watchEvtChan, err = this.client.ChildrenW(path)
+							break
+						}
+
+						time.Sleep(time.Second)
+					}
+				}
+
+			case <-this.quit: // TODO not used yet
+				return
 			}
 		}
 	}()
+
 	ch <- children
 	return err
 }
@@ -134,31 +163,4 @@ func (this *CliZk) NodeExistsError(err error) bool {
 
 func (this *CliZk) defaultAcls() []zk.ACL {
 	return zk.WorldACL(zk.PermAll)
-}
-
-func (this *CliZk) runWatchdog() {
-	var (
-		evt zk.Event
-		err error
-	)
-
-	for {
-		select {
-		case evt = <-this.sessionEvent:
-			if evt.Type == zk.EventSession && evt.State == zk.StateExpired {
-				this.Close()
-
-				// redial
-				err = this.DialTimeout(this.servers, this.timeout)
-				if err != nil {
-					log.Error("zk[%+v]: %s", this.servers, err)
-					return
-				} else {
-					log.Trace("zk[%+v] redialed ok", this.servers)
-				}
-
-			}
-		}
-	}
-
 }
