@@ -11,6 +11,7 @@ func init() {
 
 func Dial(servers []string) error {
 	if err := store.DialTimeout(servers, DEFAULT_DIAL_TIMEOUT*time.Second); err != nil {
+		store.Close()
 		return err
 	}
 
