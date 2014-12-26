@@ -38,6 +38,10 @@ func (this *CliZk) DialTimeout(servers []string,
 	return
 }
 
+func (this *CliZk) IsConnected() bool {
+	return this.client != nil
+}
+
 // reentrant safe
 func (this *CliZk) Close() {
 	this.mu.Lock()

@@ -31,6 +31,10 @@ func Dial(servers []string) error {
 	return nil
 }
 
+func IsConnected() bool {
+	return store.IsConnected()
+}
+
 func Close() {
 	store.Close()
 }
