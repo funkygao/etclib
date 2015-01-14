@@ -27,6 +27,7 @@ func (this *CliZk) DialTimeout(servers []string,
 		return nil
 	}
 
+	// the client is in StateDisconnected
 	this.client, this.sessionEvent, err = zk.Connect(servers, timeout)
 	if err != nil {
 		return
@@ -129,7 +130,16 @@ func (this *CliZk) WatchChildren(path string, ch chan []string) (err error) {
 				}
 
 			case evt := <-this.sessionEvent:
+				// StateDisconnected vs StateExpired
+				// StateDisconnected happens when client can’t connect to the server
+				// server is down, then come back, client get StateSyncConnected and
+				// everything is back to normal automatically
+				// StateExpired happens when client fails to ping server within session
+				// timeout period. Server thinks the client is dead and has deleted
+				// all the ephemeral nodes and watchers created by the client. It's
+				// client's job to reconnect and recreate ephemeral and watchers
 				if evt.Type == zk.EventSession && evt.State == zk.StateExpired {
+					//
 					log.Trace("zk event: session{%s %s}",
 						evt.Type.String(), evt.State.String())
 
