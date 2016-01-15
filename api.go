@@ -85,6 +85,10 @@ func Delete(path string) error {
 	return store.Delete(path)
 }
 
+func Get(path string) (string, error) {
+	return store.Get(path)
+}
+
 func Children(path string) ([]string, error) {
 	return store.Children(path)
 }
